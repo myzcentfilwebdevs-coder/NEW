@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Los Santos Bus Company</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Main Bus Job Interface -->
+    <div id="busInterface" class="bus-interface" style="display: none;">
+        <div class="interface-backdrop"></div>
+        
+        <!-- Header Section -->
+        <div class="interface-header">
+            <div class="company-brand">
+                <div class="brand-logo">
+                    <i class="fas fa-bus"></i>
+                </div>
+                <div class="brand-info">
+                    <h1>Los Santos Bus Company</h1>
+                    <p>Professional Transportation Services</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button class="refresh-btn" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="close-btn" onclick="closeInterface()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Container -->
+        <div class="interface-content">
+            
+            <!-- Status Dashboard -->
+            <div class="status-dashboard">
+                <div class="status-card">
+                    <div class="card-icon status">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="card-content">
+                        <h4>Work Status</h4>
+                        <p id="workStatus">Off Duty</p>
+                    </div>
+                </div>
+                
+                <div class="status-card">
+                    <div class="card-icon passengers">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="card-content">
+                        <h4>Passengers</h4>
+                        <p id="passengerCount">0</p>
+                    </div>
+                </div>
+                
+                <div class="status-card">
+                    <div class="card-icon delivered">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="card-content">
+                        <h4>Delivered</h4>
+                        <p id="deliveredCount">0</p>
+                    </div>
+                </div>
+                
+                <div class="status-card">
+                    <div class="card-icon efficiency">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="card-content">
+                        <h4>Efficiency</h4>
+                        <p id="efficiencyRate">0%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="main" onclick="switchTab('main')">
+                    <i class="fas fa-home"></i>
+                    <span>Main Menu</span>
+                </button>
+                <button class="tab-btn" data-tab="passengers" onclick="switchTab('passengers')">
+                    <i class="fas fa-users"></i>
+                    <span>Passengers</span>
+                </button>
+                <button class="tab-btn" data-tab="stations" onclick="switchTab('stations')">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Stations</span>
+                </button>
+                <button class="tab-btn" data-tab="route" onclick="switchTab('route')">
+                    <i class="fas fa-route"></i>
+                    <span>Route Info</span>
+                </button>
+                <button class="tab-btn" data-tab="stats" onclick="switchTab('stats')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Statistics</span>
+                </button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tab-content">
+                
+                <!-- Main Menu Tab -->
+                <div id="main-tab" class="tab-panel active">
+                    <div class="main-actions" id="mainActions">
+                        <!-- Main action buttons will be generated here -->
+                    </div>
+                    
+                    <div class="quick-info" id="quickInfo">
+                        <!-- Quick info will be shown here -->
+                    </div>
+                </div>
+
+                <!-- Passengers Tab -->
+                <div id="passengers-tab" class="tab-panel">
+                    <div class="tab-header">
+                        <h3><i class="fas fa-users"></i> Passenger Management</h3>
+                        <div class="tab-actions">
+                            <button class="action-btn navigate" onclick="navigateToNearest()" id="navigateBtn">
+                                <i class="fas fa-navigation"></i>
+                                Navigate to Nearest
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="passenger-list" id="passengerList">
+                        <!-- Passenger list will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Stations Tab -->
+                <div id="stations-tab" class="tab-panel">
+                    <div class="tab-header">
+                        <h3><i class="fas fa-map-marker-alt"></i> Station Overview</h3>
+                    </div>
+                    
+                    <div class="station-list" id="stationList">
+                        <!-- Station list will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Route Info Tab -->
+                <div id="route-tab" class="tab-panel">
+                    <div class="tab-header">
+                        <h3><i class="fas fa-route"></i> Route Information</h3>
+                    </div>
+                    
+                    <div class="route-info" id="routeInfo">
+                        <!-- Route info will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Statistics Tab -->
+                <div id="stats-tab" class="tab-panel">
+                    <div class="tab-header">
+                        <h3><i class="fas fa-chart-bar"></i> Performance Statistics</h3>
+                    </div>
+                    
+                    <div class="stats-content" id="statsContent">
+                        <!-- Stats will be populated here -->
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="interface-footer">
+            <div class="footer-info">
+                <p><i class="fas fa-bus"></i> Serving Los Santos with Pride</p>
+                <p>Press <kbd>ESC</kbd> to close</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
