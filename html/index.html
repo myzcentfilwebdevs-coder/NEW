@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Job Interface</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="menu-container" class="menu-container hidden">
+        <div class="menu-overlay"></div>
+        <div class="menu-card">
+            <div class="menu-header">
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                    <div class="header-text">
+                        <h1 class="menu-title">Los Santos Bus Company</h1>
+                        <p class="menu-subtitle">Professional Transportation Services</p>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeMenu()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="menu-body">
+                <div id="menu-items" class="menu-items">
+                    <!-- Menu items will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="menu-footer">
+                <div class="footer-text">
+                    <i class="fas fa-shield-alt"></i>
+                    Safe and Reliable Transportation
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
