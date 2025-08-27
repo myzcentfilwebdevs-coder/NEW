@@ -44,7 +44,7 @@ function CreateBusJobNPC()
     SetEntityInvincible(npcPed, true)
     SetBlockingOfNonTemporaryEvents(npcPed, true)
     
-    -- Ox_target interaction
+    -- Ox_target interaction - now opens comprehensive NUI
     exports['ox_target']:addLocalEntity(npcPed, {
         {
             name = 'busjob:interact',
@@ -52,20 +52,20 @@ function CreateBusJobNPC()
             label = 'Bus Job Coordinator',
             distance = 2.5,
             onSelect = function()
-                OpenBusJobMenu()
+                OpenBusJobNUI()
             end
         }
     })
 
     --  Create Blip for Bus Job NPC
     local blip = AddBlipForCoord(npc.position.x, npc.position.y, npc.position.z)
-    SetBlipSprite(blip, 513)         -- 513 = Bus icon (pwede mo palitan ng iba)
+    SetBlipSprite(blip, 513)
     SetBlipDisplay(blip, 4)
-    SetBlipScale(blip, 1.2)          -- Increased size
-    SetBlipColour(blip, 8)           -- 5 = Light Blue (pwede mo baguhin kulay)
+    SetBlipScale(blip, 1.2)
+    SetBlipColour(blip, 8)
     SetBlipAsShortRange(blip, true)
     BeginTextCommandSetBlipName("STRING")
-    AddTextComponentString("Bus Job") -- Pangalan ng blip sa mapa
+    AddTextComponentString("Bus Job")
     EndTextCommandSetBlipName(blip)
 
     print('[BusJob] NPC created successfully with blip')
@@ -389,28 +389,111 @@ function CalculateDistance(pos1, pos2)
     )
 end
 
--- Modern NUI Menu System
-function OpenBusJobMenu()
+-- Comprehensive NUI System
+function OpenBusJobNUI()
+    local playerCoords = GetEntityCoords(PlayerPedId())
+    local nearestDestination = nil
+    local nearestDistance = math.huge
+    
+    -- Find nearest destination if passengers aboard
+    if #activePassengers > 0 then
+        for _, passenger in ipairs(activePassengers) do
+            local destCoords = vector3(passenger.destination.position.x, passenger.destination.position.y, passenger.destination.position.z)
+            local distance = #(playerCoords - destCoords)
+            if distance < nearestDistance then
+                nearestDistance = distance
+                nearestDestination = passenger.destination
+            end
+        end
+    end
+    
+    -- Prepare passenger list for NUI
+    local passengerList = {}
+    for _, passenger in ipairs(activePassengers) do
+        local destCoords = vector3(passenger.destination.position.x, passenger.destination.position.y, passenger.destination.position.z)
+        local distance = #(playerCoords - destCoords)
+        table.insert(passengerList, {
+            destination = passenger.destination.name,
+            category = passenger.destination.category,
+            fare = passenger.fare,
+            distance = math.floor(distance),
+            isNearest = nearestDestination and passenger.destination.id == nearestDestination.id
+        })
+    end
+    
+    -- Sort passengers by distance
+    table.sort(passengerList, function(a, b) return a.distance < b.distance end)
+    
+    -- Prepare station list
+    local stationList = {}
+    for i, station in ipairs(selectedWaitingStations) do
+        local marker = stationMarkers[i]
+        table.insert(stationList, {
+            name = station.name,
+            description = station.description,
+            active = marker and marker.isActive or false,
+            distance = math.floor(#(playerCoords - vector3(station.position.x, station.position.y, station.position.z)))
+        })
+    end
+    
     local menuData = {
         title = "Los Santos Bus Company",
         subtitle = "Professional Transportation Services",
         isWorking = isWorking,
         hasRentedBus = hasRentedBus,
         rentalPrice = Config.BusJob.Rental.price,
-        currentRoute = currentRoute and currentRoute.name or nil,
+        currentRoute = currentRoute and {
+            name = currentRoute.name,
+            stationCount = #selectedWaitingStations
+        } or nil,
         activePassengers = #activePassengers,
-        totalDelivered = totalDeliveredPassengers
+        totalDelivered = totalDeliveredPassengers,
+        passengerList = passengerList,
+        stationList = stationList,
+        nearestDestination = nearestDestination and {
+            name = nearestDestination.name,
+            distance = math.floor(nearestDistance)
+        } or nil,
+        jobStats = isWorking and {
+            earnings = CalculateCurrentEarnings(),
+            stationsVisited = CountCompletedStations(),
+            efficiency = CalculateEfficiency()
+        } or nil
     }
     
     SetNuiFocus(true, true)
     SendNUIMessage({
-        type = "openBusMenu",
+        type = "openBusNUI",
         data = menuData
     })
 end
 
--- NUI Callbacks
-RegisterNUICallback('closeBusMenu', function(data, cb)
+-- Helper functions for statistics
+function CalculateCurrentEarnings()
+    local totalEarnings = 0
+    -- This would be tracked properly in a real implementation
+    return totalEarnings
+end
+
+function CountCompletedStations()
+    local completed = 0
+    for _, marker in ipairs(stationMarkers) do
+        if not marker.isActive then
+            completed = completed + 1
+        end
+    end
+    return completed
+end
+
+function CalculateEfficiency()
+    if totalDeliveredPassengers == 0 then return 0 end
+    local totalStations = #selectedWaitingStations
+    if totalStations == 0 then return 0 end
+    return math.floor((totalDeliveredPassengers / totalStations) * 100)
+end
+
+-- Enhanced NUI Callbacks with proper closing
+RegisterNUICallback('closeNUI', function(data, cb)
     SetNuiFocus(false, false)
     cb('ok')
 end)
@@ -431,31 +514,6 @@ RegisterNUICallback('rentBus', function(data, cb)
     cb('ok')
 end)
 
-RegisterNUICallback('routeInfo', function(data, cb)
-    if isWorking and currentRoute then
-        local info = {
-            route = currentRoute.name,
-            activePassengers = #activePassengers,
-            delivered = totalDeliveredPassengers,
-            message = "Check blinking markers for pickup points"
-        }
-        
-        SendNUIMessage({
-            type = "showRouteInfo",
-            data = info
-        })
-    end
-    cb('ok')
-end)
-
-RegisterNUICallback('passengerInfo', function(data, cb)
-    if hasRentedBus then
-        ShowPassengerInfo()
-    end
-    SetNuiFocus(false, false)
-    cb('ok')
-end)
-
 RegisterNUICallback('finishJob', function(data, cb)
     if isWorking then
         FinishJob()
@@ -470,6 +528,59 @@ RegisterNUICallback('cancelJob', function(data, cb)
     end
     SetNuiFocus(false, false)
     cb('ok')
+end)
+
+RegisterNUICallback('navigateToNearest', function(data, cb)
+    NavigateToNearestDestination()
+    cb('ok')
+end)
+
+RegisterNUICallback('navigateToDestination', function(data, cb)
+    local destinationName = data.destination
+    NavigateToSpecificDestination(destinationName)
+    cb('ok')
+end)
+
+RegisterNUICallback('refreshData', function(data, cb)
+    -- Refresh NUI data without closing
+    OpenBusJobNUI()
+    cb('ok')
+end)
+
+-- Function to navigate to specific destination
+function NavigateToSpecificDestination(destinationName)
+    if #activePassengers == 0 then
+        QBCore.Functions.Notify('No passengers aboard!', 'error')
+        return
+    end
+    
+    for _, passenger in ipairs(activePassengers) do
+        if passenger.destination.name == destinationName then
+            SetWaypointOff()
+            SetNewWaypoint(passenger.destination.position.x, passenger.destination.position.y)
+            QBCore.Functions.Notify('Navigation set to: ' .. destinationName, 'success')
+            return
+        end
+    end
+    
+    QBCore.Functions.Notify('Destination not found!', 'error')
+end
+
+-- Enhanced ESC key handling
+CreateThread(function()
+    while true do
+        Wait(0)
+        
+        -- Check if NUI is focused and ESC is pressed
+        if HasNuiFocus() then
+            if IsControlJustPressed(0, 322) then -- ESC key
+                SetNuiFocus(false, false)
+                SendNUIMessage({
+                    type = "forceClose"
+                })
+            end
+        end
+    end
 end)
 
 function StartBusJob()
