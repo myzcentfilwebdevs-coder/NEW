@@ -27,9 +27,9 @@ local isDelivering = false
 -- NUI Management
 local nuiOpen = false
 
--- Cache frequently accessed values
-local PlayerData = QBX.PlayerData or {}
-local PlayerJob = PlayerData.job or {}
+-- Cache frequently accessed values (will be initialized properly later)
+local PlayerData = {}
+local PlayerJob = {}
 
 -- Cached native functions
 local GetEntityCoords = GetEntityCoords
@@ -101,15 +101,29 @@ local localeStrings = {
     return_vehicle = "Return Vehicle"
 }
 
+-- Initialize Player Data safely
+local function initializePlayerData()
+    if GetResourceState('qbx_core') == 'started' and QBX then
+        PlayerData = QBX.PlayerData or {}
+        PlayerJob = PlayerData.job or {}
+        return true
+    end
+    return false
+end
+
 -- NUI Functions
 local function openTruckerNUI()
     if nuiOpen then return end
     
-    local playerData = QBX.PlayerData or {}
+    -- Safely get player data
+    local playerData = {}
     local money = 0
     
-    if playerData.money then
-        money = (playerData.money.cash or 0) + (playerData.money.bank or 0)
+    if GetResourceState('qbx_core') == 'started' and QBX and QBX.PlayerData then
+        playerData = QBX.PlayerData
+        if playerData.money then
+            money = (playerData.money.cash or 0) + (playerData.money.bank or 0)
+        end
     end
     
     local vehicles = {}
@@ -271,20 +285,26 @@ local function isPlayerJobTrucker()
 end
 
 local function notify(message, type)
-    if exports and exports.qbx_core then
-        exports.qbx_core:Notify(message, type)
-    else
-        -- Fallback notification system
-        BeginTextCommandThefeedPost('STRING')
-        AddTextComponentSubstringPlayerName(message)
-        EndTextCommandThefeedPostTicker(false, true)
+    -- Try QBX notification first
+    if GetResourceState('qbx_core') == 'started' and exports and exports.qbx_core then
+        local success, err = pcall(function()
+            exports.qbx_core:Notify(message, type)
+        end)
+        if not success then
+            debugPrint("⚠️ QBX Notify failed:", err)
+        end
     end
+    
+    -- Always use fallback notification for reliability
+    BeginTextCommandThefeedPost('STRING')
+    AddTextComponentSubstringPlayerName(tostring(message))
+    EndTextCommandThefeedPostTicker(false, true)
     
     -- Also send to NUI if open
     if nuiOpen then
         SendNUIMessage({
             action = "showNotification",
-            message = message,
+            message = tostring(message),
             type = type or "info"
         })
     end
@@ -1771,16 +1791,40 @@ RegisterCommand('truckercheckloc', function(source, args)
     end
 end, false)
 
+-- Safe initialization with QBX availability check
+local function safeInitialization()
+    Citizen.CreateThread(function()
+        -- Wait for QBX to be available
+        while GetResourceState('qbx_core') ~= 'started' do
+            Citizen.Wait(1000)
+        end
+        
+        -- Wait a bit more for QBX to fully initialize
+        Citizen.Wait(2000)
+        
+        -- Initialize player data
+        if initializePlayerData() then
+            debugPrint("✅ QBX initialized successfully")
+        else
+            debugPrint("⚠️ QBX not available, running in limited mode")
+        end
+        
+        -- Initialize the system
+        setInitState()
+        createElements()
+    end)
+end
+
 -- Event handlers
 AddEventHandler('onResourceStart', function(resource)
     if resource ~= GetCurrentResourceName() then return end
-    setInitState()
-    createElements()
+    safeInitialization()
 end)
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    PlayerData = QBX.PlayerData or {}
-    PlayerJob = PlayerData.job or {}
+    if initializePlayerData() then
+        debugPrint("✅ Player loaded and QBX data initialized")
+    end
     setInitState()
     createElements()
 end)
@@ -1790,7 +1834,7 @@ RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
 end)
 
 RegisterNetEvent('QBCore:Client:OnJobUpdate', function(JobInfo)
-    PlayerJob = JobInfo
+    PlayerJob = JobInfo or {}
     removeElements()
     deleteNPC()
 
@@ -1897,9 +1941,15 @@ AddEventHandler('baseevents:leftVehicle', function(vehicle, seat, displayName, n
     onPlayerExitVehicle(vehicle)
 end)
 
--- Initialize when script starts
+-- Initialize when script starts (safe version)
 Citizen.CreateThread(function()
     Wait(1000)
-    setInitState()
-    createElements()
+    
+    -- Check if we're starting standalone or if QBX is already running
+    if GetResourceState('qbx_core') == 'started' then
+        safeInitialization()
+    else
+        debugPrint("⚠️ Waiting for QBX Core to start...")
+        -- QBX will trigger safeInitialization when it starts
+    end
 end)

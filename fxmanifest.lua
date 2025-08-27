@@ -7,16 +7,17 @@ author 'Your Name'
 version '2.0.0'
 
 shared_scripts {
-    '@ox_lib/init.lua',
-    '@qbx_core/modules/lib.lua'
-}
-
-client_scripts {
-    'client/main.lua'
+    '@ox_lib/init.lua'
 }
 
 server_scripts {
+    '@qbx_core/modules/lib.lua',
     'server/main.lua'
+}
+
+client_scripts {
+    '@qbx_core/modules/lib.lua',
+    'client/main.lua'
 }
 
 ui_page 'html/index.html'
