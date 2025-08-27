@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Services</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="main-container" class="hidden">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-truck"></i>
+                    <span>Delivery Services</span>
+                </div>
+                <div class="close-btn" onclick="closeNUI()">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-btn active" data-tab="vehicles" onclick="showTab('vehicles')">
+                <i class="fas fa-truck"></i>
+                <span>Vehicles</span>
+            </button>
+            <button class="nav-btn" data-tab="jobs" onclick="showTab('jobs')">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Active Jobs</span>
+            </button>
+            <button class="nav-btn" data-tab="stats" onclick="showTab('stats')">
+                <i class="fas fa-chart-bar"></i>
+                <span>Statistics</span>
+            </button>
+            <button class="nav-btn" data-tab="settings" onclick="showTab('settings')">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content">
+            <!-- Vehicles Tab -->
+            <div id="vehicles-tab" class="tab-content active">
+                <div class="tab-header">
+                    <h2><i class="fas fa-truck"></i> Available Vehicles</h2>
+                    <div class="wallet-info">
+                        <i class="fas fa-wallet"></i>
+                        <span id="player-money">$0</span>
+                    </div>
+                </div>
+                
+                <div class="vehicles-grid" id="vehicles-list">
+                    <!-- Vehicles will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Jobs Tab -->
+            <div id="jobs-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-clipboard-list"></i> Active Jobs</h2>
+                    <div class="job-stats">
+                        <div class="stat-item">
+                            <span class="stat-value" id="completed-deliveries">0</span>
+                            <span class="stat-label">Completed</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="total-deliveries">0</span>
+                            <span class="stat-label">Total</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="job-info" id="job-info">
+                    <div class="no-job">
+                        <i class="fas fa-clipboard"></i>
+                        <h3>No Active Job</h3>
+                        <p>Select a vehicle to start making deliveries</p>
+                    </div>
+                </div>
+
+                <div class="current-delivery" id="current-delivery" style="display: none;">
+                    <h3><i class="fas fa-map-marker-alt"></i> Current Delivery</h3>
+                    <div class="delivery-info">
+                        <div class="delivery-location">
+                            <strong id="delivery-location">-</strong>
+                        </div>
+                        <div class="delivery-boxes">
+                            <span id="delivery-boxes">0</span> boxes to deliver
+                        </div>
+                        <div class="delivery-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="delivery-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div id="stats-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-chart-bar"></i> Statistics</h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="total-boxes">0</div>
+                            <div class="stat-title">Total Boxes Delivered</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="total-earned">$0</div>
+                            <div class="stat-title">Total Earned</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="total-time">0h</div>
+                            <div class="stat-title">Time Worked</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-route"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="total-trips">0</div>
+                            <div class="stat-title">Trips Completed</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="performance-chart">
+                    <h3>Performance Overview</h3>
+                    <div class="chart-container">
+                        <canvas id="performance-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2><i class="fas fa-cog"></i> Settings</h2>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>GPS Route</h4>
+                            <p>Show route to delivery locations</p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="gps-route" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Sound Effects</h4>
+                            <p>Play notification sounds</p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="sound-effects" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Auto-Accept Jobs</h4>
+                            <p>Automatically accept new delivery jobs</p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="auto-accept">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Notification Position</h4>
+                            <p>Choose where notifications appear</p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="notification-position">
+                                <option value="top-right">Top Right</option>
+                                <option value="top-left">Top Left</option>
+                                <option value="bottom-right">Bottom Right</option>
+                                <option value="bottom-left">Bottom Left</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-danger" onclick="returnVehicle()">
+                        <i class="fas fa-undo"></i>
+                        Return Vehicle
+                    </button>
+                    <button class="btn btn-success" onclick="collectPaycheck()">
+                        <i class="fas fa-money-bill"></i>
+                        Collect Paycheck
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle Selection Modal -->
+    <div id="vehicle-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-vehicle-name">Vehicle Name</h3>
+                <button class="close-modal" onclick="closeVehicleModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="vehicle-preview">
+                    <img id="modal-vehicle-image" src="" alt="Vehicle Preview">
+                </div>
+                <div class="vehicle-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Rental Cost:</span>
+                        <span class="detail-value" id="modal-rental-cost">$500</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Cargo Capacity:</span>
+                        <span class="detail-value" id="modal-capacity">Medium</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Fuel Efficiency:</span>
+                        <span class="detail-value" id="modal-efficiency">Good</span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeVehicleModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="confirmVehicleRental()">
+                        <i class="fas fa-key"></i>
+                        Rent Vehicle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
